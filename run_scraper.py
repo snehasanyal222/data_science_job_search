@@ -45,6 +45,38 @@ def main() -> None:
         else:
             print("LinkedIn login was not detected within timeout. Continuing without login.")
 
+    naukri_username = (
+        url_config["naukri"].get("username")
+        or os.environ.get("NAUKRI_USERNAME")
+    )
+    naukri_password = (
+        url_config["naukri"].get("password")
+        or os.environ.get("NAUKRI_PASSWORD")
+    )
+    if naukri_username and naukri_password:
+        print("Opening Naukri login page for manual authentication...")
+        scraper.open_naukri_login()
+        if scraper.wait_for_naukri_login():
+            print("Manual Naukri login detected.")
+        else:
+            print("Naukri login was not detected within timeout. Continuing without login.")
+
+    indeed_username = (
+        url_config["indeed"].get("username")
+        or os.environ.get("INDEED_USERNAME")
+    )
+    indeed_password = (
+        url_config["indeed"].get("password")
+        or os.environ.get("INDEED_PASSWORD")
+    )
+    if indeed_username and indeed_password:
+        print("Opening Indeed login page for manual authentication...")
+        scraper.open_indeed_login()
+        if scraper.wait_for_indeed_login():
+            print("Manual Indeed login detected.")
+        else:
+            print("Indeed login was not detected within timeout. Continuing without login.")
+
     try:
         all_jobs.append(scraper.scrape_linkedin(url_config["linkedin"]["url"], min_jobs=30))
         all_jobs.append(scraper.scrape_naukri(url_config["naukri"]["url"], min_jobs=30))

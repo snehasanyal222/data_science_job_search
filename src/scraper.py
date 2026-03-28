@@ -63,6 +63,40 @@ class JobScraper:
         except Exception:
             return False
 
+    def open_naukri_login(self) -> None:
+        """Open the Naukri login page for manual authentication."""
+        self.driver.get("https://www.naukri.com/nlogin/login")
+        self.wait.until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "input#emailTxt, input[name='email']"))
+        )
+
+    def wait_for_naukri_login(self, timeout: int = 300) -> bool:
+        """Wait until the user has completed Naukri login manually."""
+        try:
+            WebDriverWait(self.driver, timeout).until_not(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "input#passwordField, input[name='password']"))
+            )
+            return True
+        except Exception:
+            return False
+
+    def open_indeed_login(self) -> None:
+        """Open the Indeed login page for manual authentication."""
+        self.driver.get("https://secure.indeed.com/account/login")
+        self.wait.until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "input#login-email-input, input[type='email']"))
+        )
+
+    def wait_for_indeed_login(self, timeout: int = 300) -> bool:
+        """Wait until the user has completed Indeed login manually."""
+        try:
+            WebDriverWait(self.driver, timeout).until_not(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "input#login-password-input, input[type='password']"))
+            )
+            return True
+        except Exception:
+            return False
+
     def scrape_linkedin(self, url: str, min_jobs: int = 50) -> pd.DataFrame:
         """Scrape LinkedIn search results and return a job DataFrame."""
         self.driver.get(url)
