@@ -45,35 +45,11 @@ def main() -> None:
         else:
             print("LinkedIn login was not detected within timeout. Continuing without login.")
 
-    naukri_username = (
-        url_config["naukri"].get("username")
-        or os.environ.get("NAUKRI_USERNAME")
-    )
-    naukri_password = (
-        url_config["naukri"].get("password")
-        or os.environ.get("NAUKRI_PASSWORD")
-    )
-    if naukri_username and naukri_password:
-        print("Attempting automatic Naukri login...")
-        if scraper.login_naukri(naukri_username, naukri_password):
-            print("Naukri auto-login succeeded.")
-        else:
-            print("Automatic Naukri login failed. Opening manual login page.")
-            scraper.open_naukri_login()
-            if scraper.wait_for_naukri_login():
-                print("Manual Naukri login detected.")
-            else:
-                print("Naukri login was not detected within timeout. Continuing without login.")
-
 
     try:
         linkedin_jobs = scraper.scrape_linkedin(url_config["linkedin"]["url"], min_jobs=30)
         print(f"LinkedIn scraped {len(linkedin_jobs)} jobs")
         all_jobs.append(linkedin_jobs)
-
-        naukri_jobs = scraper.scrape_naukri(url_config["naukri"]["url"], min_jobs=30)
-        print(f"Naukri scraped {len(naukri_jobs)} jobs")
-        all_jobs.append(naukri_jobs)
     finally:
         scraper.close()
 
