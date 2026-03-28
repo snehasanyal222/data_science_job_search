@@ -54,19 +54,38 @@ def main() -> None:
         or os.environ.get("NAUKRI_PASSWORD")
     )
     if naukri_username and naukri_password:
-        print("Opening Naukri login page for manual authentication...")
-        scraper.open_naukri_login()
-        if scraper.wait_for_naukri_login():
-            print("Manual Naukri login detected.")
+        print("Attempting automatic Naukri login...")
+        if scraper.login_naukri(naukri_username, naukri_password):
+            print("Naukri auto-login succeeded.")
         else:
-            print("Naukri login was not detected within timeout. Continuing without login.")
+            print("Automatic Naukri login failed. Opening manual login page.")
+            scraper.open_naukri_login()
+            if scraper.wait_for_naukri_login():
+                print("Manual Naukri login detected.")
+            else:
+                print("Naukri login was not detected within timeout. Continuing without login.")
 
     indeed_username = (
         url_config["indeed"].get("username")
         or os.environ.get("INDEED_USERNAME")
     )
-    if indeed_username:
-        print("Opening Indeed login page for manual authentication...")
+    indeed_password = (
+        url_config["indeed"].get("password")
+        or os.environ.get("INDEED_PASSWORD")
+    )
+    if indeed_username and indeed_password:
+        print("Attempting automatic Indeed login...")
+        if scraper.login_indeed(indeed_username, indeed_password):
+            print("Indeed auto-login succeeded.")
+        else:
+            print("Automatic Indeed login failed. Opening manual login page.")
+            scraper.open_indeed_login(email=indeed_username)
+            if scraper.wait_for_indeed_login():
+                print("Manual Indeed login detected.")
+            else:
+                print("Indeed login was not detected within timeout. Continuing without login.")
+    elif indeed_username:
+        print("Indeed password not configured. Opening browser for manual login.")
         scraper.open_indeed_login(email=indeed_username)
         if scraper.wait_for_indeed_login():
             print("Manual Indeed login detected.")

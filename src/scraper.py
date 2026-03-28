@@ -74,6 +74,40 @@ class JobScraper:
             EC.visibility_of_element_located((By.CSS_SELECTOR, "input#emailTxt, input[name='email']"))
         )
 
+    def login_naukri(self, username: str, password: str) -> bool:
+        """Log in to Naukri automatically with provided credentials."""
+        self.driver.get("https://www.naukri.com/nlogin/login")
+
+        try:
+            email_field = self.wait.until(
+                EC.visibility_of_element_located(
+                    (By.CSS_SELECTOR, "input#emailTxt, input[name='email'], input[name='username']")
+                )
+            )
+            email_field.clear()
+            email_field.send_keys(username)
+
+            password_field = self.driver.find_element(
+                By.CSS_SELECTOR,
+                "input#passwordField, input#pwd1, input[name='password'], input[type='password']"
+            )
+            password_field.clear()
+            password_field.send_keys(password)
+
+            submit_button = self.driver.find_element(
+                By.CSS_SELECTOR,
+                "button[type='submit'], button#loginBtn, input[type='submit']"
+            )
+            submit_button.click()
+
+            WebDriverWait(self.driver, 30).until(
+                lambda d: "/nlogin/login" not in d.current_url
+                or not d.find_elements(By.CSS_SELECTOR, "input#passwordField, input#pwd1, input[name='password'], input[type='password']")
+            )
+            return True
+        except Exception:
+            return False
+
     def wait_for_naukri_login(self, timeout: int = 300) -> bool:
         """Wait until the user has completed Naukri login manually."""
         try:
@@ -96,6 +130,39 @@ class JobScraper:
                 email_field.send_keys(email)
             except Exception:
                 pass
+
+    def login_indeed(self, email: str, password: str) -> bool:
+        """Log in to Indeed automatically with provided credentials."""
+        self.driver.get("https://secure.indeed.com/account/login")
+
+        try:
+            email_field = self.wait.until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, "input#login-email-input, input[type='email']"))
+            )
+            email_field.clear()
+            email_field.send_keys(email)
+
+            password_field = self.wait.until(
+                EC.visibility_of_element_located(
+                    (By.CSS_SELECTOR, "input#login-password-input, input[name='password'], input[type='password']")
+                )
+            )
+            password_field.clear()
+            password_field.send_keys(password)
+
+            submit_button = self.driver.find_element(
+                By.CSS_SELECTOR,
+                "button[type='submit'], button#login-submit, input[type='submit']"
+            )
+            submit_button.click()
+
+            WebDriverWait(self.driver, 30).until(
+                lambda d: "/account/login" not in d.current_url
+                or not d.find_elements(By.CSS_SELECTOR, "input#login-password-input, input[name='password'], input[type='password']")
+            )
+            return True
+        except Exception:
+            return False
 
     def wait_for_indeed_login(self, timeout: int = 300) -> bool:
         """Wait until the user has completed Indeed login manually."""
