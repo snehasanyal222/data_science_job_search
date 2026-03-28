@@ -1,9 +1,8 @@
 import os
 import yaml
 import pandas as pd
-from pathlib import Path
 from src.scraper import JobScraper
-from src.storage import save_to_csv, save_to_sqlite
+from src.storage import save_to_csv
 
 
 def load_config(path: str) -> dict:
@@ -45,8 +44,7 @@ def main() -> None:
     df = df.drop_duplicates(subset=["job_title", "company", "apply_link"])
 
     save_to_csv(df, output_config["csv"])
-    save_to_sqlite(df, output_config["sqlite"])
-    print(f"Saved {len(df)} jobs to {output_config['csv']} and {output_config['sqlite']}")
+    print(f"Saved {len(df)} jobs to {output_config['csv']}")
 
 
 if __name__ == "__main__":
