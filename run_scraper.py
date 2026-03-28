@@ -65,13 +65,9 @@ def main() -> None:
         url_config["indeed"].get("username")
         or os.environ.get("INDEED_USERNAME")
     )
-    indeed_password = (
-        url_config["indeed"].get("password")
-        or os.environ.get("INDEED_PASSWORD")
-    )
-    if indeed_username and indeed_password:
+    if indeed_username:
         print("Opening Indeed login page for manual authentication...")
-        scraper.open_indeed_login()
+        scraper.open_indeed_login(email=indeed_username)
         if scraper.wait_for_indeed_login():
             print("Manual Indeed login detected.")
         else:

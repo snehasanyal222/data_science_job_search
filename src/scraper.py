@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from time import sleep
-from typing import Dict, List
+from typing import Dict, List, Optional
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -41,9 +41,7 @@ class JobScraper:
         self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
         try:
-            self.wait.until(
-                lambda d: "feed" in d.current_url or "jobs" in d.current_url
-            )
+            WebDriverWait(self.driver, 30).until(lambda d: self._is_linkedin_authenticated())
             return True
         except Exception:
             return False
@@ -53,12 +51,18 @@ class JobScraper:
         self.driver.get("https://www.linkedin.com/login")
         self.wait.until(EC.visibility_of_element_located((By.ID, "username")))
 
-    def wait_for_linkedin_login(self, timeout: int = 300) -> bool:
+    def _is_linkedin_authenticated(self) -> bool:
+        """Return True if the current browser session is logged in to LinkedIn."""
+        if self.driver.get_cookie("li_at"):
+            return True
+
+        current_url = self.driver.current_url
+        return any(token in current_url for token in ("/feed/", "/jobs", "/me/", "/profile"))
+
+    def wait_for_linkedin_login(self, timeout: int = 600) -> bool:
         """Wait until the user has logged in to LinkedIn manually."""
         try:
-            WebDriverWait(self.driver, timeout).until(
-                lambda d: "feed" in d.current_url or "jobs" in d.current_url
-            )
+            WebDriverWait(self.driver, timeout).until(lambda d: self._is_linkedin_authenticated())
             return True
         except Exception:
             return False
@@ -80,12 +84,18 @@ class JobScraper:
         except Exception:
             return False
 
-    def open_indeed_login(self) -> None:
+    def open_indeed_login(self, email: Optional[str] = None) -> None:
         """Open the Indeed login page for manual authentication."""
         self.driver.get("https://secure.indeed.com/account/login")
-        self.wait.until(
+        email_field = self.wait.until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, "input#login-email-input, input[type='email']"))
         )
+        if email:
+            try:
+                email_field.clear()
+                email_field.send_keys(email)
+            except Exception:
+                pass
 
     def wait_for_indeed_login(self, timeout: int = 300) -> bool:
         """Wait until the user has completed Indeed login manually."""
