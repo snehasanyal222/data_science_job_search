@@ -43,7 +43,7 @@ def show_skills(df: pd.DataFrame) -> None:
 def main() -> None:
     st.title("Data Science Job Market Analyzer")
     st.write(
-        "Load scraped job data and display a simple report for LinkedIn, Naukri, and Indeed."
+        "Load scraped job data and display a simple report for LinkedIn and Naukri."
     )
 
     if not DATA_PATH.exists():

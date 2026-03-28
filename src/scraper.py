@@ -14,7 +14,7 @@ from src.utils import parse_experience, parse_salary
 
 
 class JobScraper:
-    """Simple Selenium scraper for LinkedIn, Naukri, and Indeed."""
+    """Simple Selenium scraper for LinkedIn and Naukri."""
 
     def __init__(self, headless: bool = False) -> None:
         options = Options()
@@ -49,7 +49,10 @@ class JobScraper:
     def open_linkedin_login(self) -> None:
         """Open the LinkedIn login page in the browser for manual authentication."""
         self.driver.get("https://www.linkedin.com/login")
-        self.wait.until(EC.visibility_of_element_located((By.ID, "username")))
+        try:
+            self.wait.until(EC.visibility_of_element_located((By.ID, "username")))
+        except Exception:
+            pass
 
     def _is_linkedin_authenticated(self) -> bool:
         """Return True if the current browser session is logged in to LinkedIn."""
@@ -70,9 +73,12 @@ class JobScraper:
     def open_naukri_login(self) -> None:
         """Open the Naukri login page for manual authentication."""
         self.driver.get("https://www.naukri.com/nlogin/login")
-        self.wait.until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "input#emailTxt, input[name='email']"))
-        )
+        try:
+            self.wait.until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, "input#emailTxt, input[name='email']"))
+            )
+        except Exception:
+            pass
 
     def login_naukri(self, username: str, password: str) -> bool:
         """Log in to Naukri automatically with provided credentials."""
@@ -113,62 +119,6 @@ class JobScraper:
         try:
             WebDriverWait(self.driver, timeout).until_not(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "input#passwordField, input[name='password']"))
-            )
-            return True
-        except Exception:
-            return False
-
-    def open_indeed_login(self, email: Optional[str] = None) -> None:
-        """Open the Indeed login page for manual authentication."""
-        self.driver.get("https://secure.indeed.com/account/login")
-        email_field = self.wait.until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "input#login-email-input, input[type='email']"))
-        )
-        if email:
-            try:
-                email_field.clear()
-                email_field.send_keys(email)
-            except Exception:
-                pass
-
-    def login_indeed(self, email: str, password: str) -> bool:
-        """Log in to Indeed automatically with provided credentials."""
-        self.driver.get("https://secure.indeed.com/account/login")
-
-        try:
-            email_field = self.wait.until(
-                EC.visibility_of_element_located((By.CSS_SELECTOR, "input#login-email-input, input[type='email']"))
-            )
-            email_field.clear()
-            email_field.send_keys(email)
-
-            password_field = self.wait.until(
-                EC.visibility_of_element_located(
-                    (By.CSS_SELECTOR, "input#login-password-input, input[name='password'], input[type='password']")
-                )
-            )
-            password_field.clear()
-            password_field.send_keys(password)
-
-            submit_button = self.driver.find_element(
-                By.CSS_SELECTOR,
-                "button[type='submit'], button#login-submit, input[type='submit']"
-            )
-            submit_button.click()
-
-            WebDriverWait(self.driver, 30).until(
-                lambda d: "/account/login" not in d.current_url
-                or not d.find_elements(By.CSS_SELECTOR, "input#login-password-input, input[name='password'], input[type='password']")
-            )
-            return True
-        except Exception:
-            return False
-
-    def wait_for_indeed_login(self, timeout: int = 300) -> bool:
-        """Wait until the user has completed Indeed login manually."""
-        try:
-            WebDriverWait(self.driver, timeout).until_not(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "input#login-password-input, input[type='password']"))
             )
             return True
         except Exception:
@@ -230,41 +180,6 @@ class JobScraper:
             details = self._scrape_job_page(link)
             jobs.append({
                 "platform": "Naukri",
-                "job_title": title,
-                "company": company,
-                "location": location,
-                "experience_required": details.get("experience_required", ""),
-                "skills": details.get("skills", ""),
-                "salary": details.get("salary", ""),
-                "job_description": details.get("job_description", ""),
-                "apply_link": link,
-                "posted_date": details.get("posted_date", ""),
-            })
-
-        return pd.DataFrame(jobs)
-
-    def scrape_indeed(self, url: str, min_jobs: int = 50) -> pd.DataFrame:
-        """Scrape Indeed search results and return a job DataFrame."""
-        self.driver.get(url)
-        self._scroll_page(min_jobs)
-
-        cards = self.driver.find_elements(By.CSS_SELECTOR, "div.job_seen_beacon, a.tapItem")
-        jobs: List[Dict[str, str]] = []
-
-        for card in cards[:min_jobs]:
-            title = self._safe_text(card, "h2.jobTitle, h2 span")
-            company = self._safe_text(card, "span.companyName")
-            location = self._safe_text(card, "div.companyLocation")
-            link = self._safe_attribute(card, "a.jcs-JobTitle, a.tapItem", "href")
-            if link and link.startswith("/"):
-                link = "https://www.indeed.co.in" + link
-
-            if not link:
-                continue
-
-            details = self._scrape_job_page(link)
-            jobs.append({
-                "platform": "Indeed",
                 "job_title": title,
                 "company": company,
                 "location": location,

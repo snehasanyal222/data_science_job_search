@@ -65,37 +65,10 @@ def main() -> None:
             else:
                 print("Naukri login was not detected within timeout. Continuing without login.")
 
-    indeed_username = (
-        url_config["indeed"].get("username")
-        or os.environ.get("INDEED_USERNAME")
-    )
-    indeed_password = (
-        url_config["indeed"].get("password")
-        or os.environ.get("INDEED_PASSWORD")
-    )
-    if indeed_username and indeed_password:
-        print("Attempting automatic Indeed login...")
-        if scraper.login_indeed(indeed_username, indeed_password):
-            print("Indeed auto-login succeeded.")
-        else:
-            print("Automatic Indeed login failed. Opening manual login page.")
-            scraper.open_indeed_login(email=indeed_username)
-            if scraper.wait_for_indeed_login():
-                print("Manual Indeed login detected.")
-            else:
-                print("Indeed login was not detected within timeout. Continuing without login.")
-    elif indeed_username:
-        print("Indeed password not configured. Opening browser for manual login.")
-        scraper.open_indeed_login(email=indeed_username)
-        if scraper.wait_for_indeed_login():
-            print("Manual Indeed login detected.")
-        else:
-            print("Indeed login was not detected within timeout. Continuing without login.")
 
     try:
         all_jobs.append(scraper.scrape_linkedin(url_config["linkedin"]["url"], min_jobs=30))
         all_jobs.append(scraper.scrape_naukri(url_config["naukri"]["url"], min_jobs=30))
-        all_jobs.append(scraper.scrape_indeed(url_config["indeed"]["url"], min_jobs=30))
     finally:
         scraper.close()
 
