@@ -5,6 +5,8 @@ search:
 platforms:
   linkedin:
     url: "https://www.linkedin.com/jobs/search/?keywords=Data%20Scientist&location=Bengaluru%2C%20Karnataka%2C%20India&f_E=3"
+    username: ""
+    password: ""
   naukri:
     url: "https://www.naukri.com/data-scientist-jobs-in-bangalore?k=Data+Scientist"
   indeed:

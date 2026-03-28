@@ -9,6 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+from src.utils import parse_experience, parse_salary
 
 
 class JobScraper:
@@ -32,6 +33,21 @@ class JobScraper:
     def close(self) -> None:
         """Close the browser cleanly."""
         self.driver.quit()
+
+    def login_linkedin(self, username: str, password: str) -> bool:
+        """Log in to LinkedIn before scraping protected search results."""
+        self.driver.get("https://www.linkedin.com/login")
+        self.wait.until(EC.visibility_of_element_located((By.ID, "username"))).send_keys(username)
+        self.driver.find_element(By.ID, "password").send_keys(password)
+        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+
+        try:
+            self.wait.until(
+                lambda d: "feed" in d.current_url or "jobs" in d.current_url
+            )
+            return True
+        except Exception:
+            return False
 
     def scrape_linkedin(self, url: str, min_jobs: int = 50) -> pd.DataFrame:
         """Scrape LinkedIn search results and return a job DataFrame."""
@@ -162,12 +178,15 @@ class JobScraper:
 
         description = self._safe_text(
             self.driver,
-            "div.show-more-less-html__markup, div.job-description, div.jd-desc"
+            "div.show-more-less-html__markup, div.job-description, div.jd-desc, div.description__text"
         )
-        experience = self._safe_text(self.driver, "span.job-criteria__text, li.job-criteria__item div")
-        salary = self._safe_text(self.driver, "span.salary, div.salary")
+        raw_experience = self._safe_text(self.driver, "span.job-criteria__text, li.job-criteria__item div")
+        raw_salary = self._safe_text(self.driver, "span.salary, div.salary")
         skills = self._safe_text(self.driver, "div.skills-section, ul.key-skills, div.tags")
         posted_date = self._safe_text(self.driver, "span.posted-time-ago__text, div.posted-date")
+
+        experience = parse_experience(raw_experience or description)
+        salary = parse_salary(raw_salary or description)
 
         self.driver.close()
         self.driver.switch_to.window(self.driver.window_handles[0])

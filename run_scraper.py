@@ -1,3 +1,4 @@
+import os
 import yaml
 import pandas as pd
 from pathlib import Path
@@ -17,6 +18,21 @@ def main() -> None:
 
     scraper = JobScraper(headless=config["browser"].get("headless", False))
     all_jobs = []
+
+    linkedin_username = (
+        url_config["linkedin"].get("username")
+        or os.environ.get("LINKEDIN_USERNAME")
+    )
+    linkedin_password = (
+        url_config["linkedin"].get("password")
+        or os.environ.get("LINKEDIN_PASSWORD")
+    )
+
+    if linkedin_username and linkedin_password:
+        print("Logging in to LinkedIn before scraping...")
+        scraper.login_linkedin(linkedin_username, linkedin_password)
+    else:
+        print("LinkedIn credentials not configured. Scraping without login.")
 
     try:
         all_jobs.append(scraper.scrape_linkedin(url_config["linkedin"]["url"], min_jobs=30))
