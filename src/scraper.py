@@ -5,6 +5,7 @@ from typing import Dict, List
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -24,10 +25,8 @@ class JobScraper:
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
-        self.driver = webdriver.Chrome(
-            ChromeDriverManager().install(),
-            options=options,
-        )
+        chrome_service = Service(ChromeDriverManager().install())
+        self.driver = webdriver.Chrome(service=chrome_service, options=options)
         self.wait = WebDriverWait(self.driver, 15)
 
     def close(self) -> None:
@@ -35,7 +34,7 @@ class JobScraper:
         self.driver.quit()
 
     def login_linkedin(self, username: str, password: str) -> bool:
-        """Log in to LinkedIn before scraping protected search results."""
+        """Log in to LinkedIn automatically with provided credentials."""
         self.driver.get("https://www.linkedin.com/login")
         self.wait.until(EC.visibility_of_element_located((By.ID, "username"))).send_keys(username)
         self.driver.find_element(By.ID, "password").send_keys(password)
@@ -43,6 +42,21 @@ class JobScraper:
 
         try:
             self.wait.until(
+                lambda d: "feed" in d.current_url or "jobs" in d.current_url
+            )
+            return True
+        except Exception:
+            return False
+
+    def open_linkedin_login(self) -> None:
+        """Open the LinkedIn login page in the browser for manual authentication."""
+        self.driver.get("https://www.linkedin.com/login")
+        self.wait.until(EC.visibility_of_element_located((By.ID, "username")))
+
+    def wait_for_linkedin_login(self, timeout: int = 300) -> bool:
+        """Wait until the user has logged in to LinkedIn manually."""
+        try:
+            WebDriverWait(self.driver, timeout).until(
                 lambda d: "feed" in d.current_url or "jobs" in d.current_url
             )
             return True

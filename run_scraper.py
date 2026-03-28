@@ -29,9 +29,21 @@ def main() -> None:
 
     if linkedin_username and linkedin_password:
         print("Logging in to LinkedIn before scraping...")
-        scraper.login_linkedin(linkedin_username, linkedin_password)
+        scraped = scraper.login_linkedin(linkedin_username, linkedin_password)
+        if not scraped:
+            print("Automatic login failed. Opening manual login page.")
+            scraper.open_linkedin_login()
+            if scraper.wait_for_linkedin_login():
+                print("Manual LinkedIn login detected.")
+            else:
+                print("LinkedIn login was not detected within timeout. Continuing without login.")
     else:
-        print("LinkedIn credentials not configured. Scraping without login.")
+        print("LinkedIn credentials not configured. Opening browser for manual login.")
+        scraper.open_linkedin_login()
+        if scraper.wait_for_linkedin_login():
+            print("Manual LinkedIn login detected.")
+        else:
+            print("LinkedIn login was not detected within timeout. Continuing without login.")
 
     try:
         all_jobs.append(scraper.scrape_linkedin(url_config["linkedin"]["url"], min_jobs=30))
