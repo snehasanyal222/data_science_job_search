@@ -67,8 +67,13 @@ def main() -> None:
 
 
     try:
-        all_jobs.append(scraper.scrape_linkedin(url_config["linkedin"]["url"], min_jobs=30))
-        all_jobs.append(scraper.scrape_naukri(url_config["naukri"]["url"], min_jobs=30))
+        linkedin_jobs = scraper.scrape_linkedin(url_config["linkedin"]["url"], min_jobs=30)
+        print(f"LinkedIn scraped {len(linkedin_jobs)} jobs")
+        all_jobs.append(linkedin_jobs)
+
+        naukri_jobs = scraper.scrape_naukri(url_config["naukri"]["url"], min_jobs=30)
+        print(f"Naukri scraped {len(naukri_jobs)} jobs")
+        all_jobs.append(naukri_jobs)
     finally:
         scraper.close()
 
