@@ -1,0 +1,16 @@
+search:
+  query: "Data Scientist"
+  location: "Bengaluru"
+  experience: "3+ years"
+platforms:
+  linkedin:
+    url: "https://www.linkedin.com/jobs/search/?keywords=Data%20Scientist&location=Bengaluru%2C%20Karnataka%2C%20India&f_E=3"
+  naukri:
+    url: "https://www.naukri.com/data-scientist-jobs-in-bangalore?k=Data+Scientist"
+  indeed:
+    url: "https://www.indeed.co.in/jobs?q=Data+Scientist&l=Bengaluru%2C+Karnataka"
+output:
+  csv: "data/jobs.csv"
+  sqlite: "data/jobs.sqlite"
+browser:
+  headless: false
