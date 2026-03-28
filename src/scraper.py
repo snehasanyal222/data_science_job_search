@@ -82,36 +82,48 @@ class JobScraper:
 
     def login_naukri(self, username: str, password: str) -> bool:
         """Log in to Naukri automatically with provided credentials."""
+        print("Naukri login: opening login page")
         self.driver.get("https://www.naukri.com/nlogin/login")
 
         try:
             email_field = self.wait.until(
                 EC.visibility_of_element_located(
-                    (By.CSS_SELECTOR, "input#emailTxt, input[name='email'], input[name='username']")
+                    (By.CSS_SELECTOR, "input#emailTxt, input#usernameField, input[name='email'], input[name='username']")
                 )
             )
+            print("Naukri login: email field located")
             email_field.clear()
             email_field.send_keys(username)
 
-            password_field = self.driver.find_element(
-                By.CSS_SELECTOR,
-                "input#passwordField, input#pwd1, input[name='password'], input[type='password']"
+            password_field = self.wait.until(
+                EC.visibility_of_element_located(
+                    (By.CSS_SELECTOR, "input#passwordField, input#pwd1, input#PASSWORD, input[name='password'], input[type='password']")
+                )
             )
+            print("Naukri login: password field located")
             password_field.clear()
             password_field.send_keys(password)
 
-            submit_button = self.driver.find_element(
-                By.CSS_SELECTOR,
-                "button[type='submit'], button#loginBtn, input[type='submit']"
+            submit_button = self.wait.until(
+                EC.element_to_be_clickable(
+                    (By.CSS_SELECTOR, "button[type='submit'], button#loginBtn, button[data-ga-track='login'], input[type='submit']")
+                )
             )
+            print("Naukri login: submit button located")
             submit_button.click()
 
-            WebDriverWait(self.driver, 30).until(
-                lambda d: "/nlogin/login" not in d.current_url
-                or not d.find_elements(By.CSS_SELECTOR, "input#passwordField, input#pwd1, input[name='password'], input[type='password']")
-            )
-            return True
-        except Exception:
+            try:
+                WebDriverWait(self.driver, 10).until(
+                    lambda d: "/nlogin/login" not in d.current_url
+                    or not d.find_elements(By.CSS_SELECTOR, "input#passwordField, input#pwd1, input#PASSWORD, input[name='password'], input[type='password']")
+                )
+                print("Naukri login: submit returned, checking redirect")
+                return True
+            except Exception as exc:
+                print(f"Naukri login did not confirm success: {exc}")
+                return False
+        except Exception as exc:
+            print(f"Naukri login failed: {exc}")
             return False
 
     def wait_for_naukri_login(self, timeout: int = 300) -> bool:
@@ -127,12 +139,21 @@ class JobScraper:
     def scrape_linkedin(self, url: str, min_jobs: int = 50) -> pd.DataFrame:
         """Scrape LinkedIn search results and return a job DataFrame."""
         self.driver.get(url)
+        try:
+            self.wait.until(
+                EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, "ul.jobs-search__results-list, ul.jobs-search-results__list")
+                )
+            )
+        except Exception:
+            pass
         self._scroll_page(min_jobs)
 
         cards = self.driver.find_elements(
             By.CSS_SELECTOR,
-            "ul.jobs-search__results-list li, ul.jobs-search-results__list li"
+            "ul.jobs-search__results-list li, ul.jobs-search-results__list li, div.job-card-container, div.job-card-list__title"
         )
+        print(f"[DEBUG] LinkedIn card count: {len(cards)}")
 
         jobs: List[Dict[str, str]] = []
         for card in cards[:min_jobs]:
@@ -158,14 +179,26 @@ class JobScraper:
                 "posted_date": details.get("posted_date", ""),
             })
 
-        return pd.DataFrame(jobs)
+        return pd.DataFrame(jobs, columns=[
+            "platform",
+            "job_title",
+            "company",
+            "location",
+            "experience_required",
+            "skills",
+            "salary",
+            "job_description",
+            "apply_link",
+            "posted_date",
+        ])
 
     def scrape_naukri(self, url: str, min_jobs: int = 50) -> pd.DataFrame:
         """Scrape Naukri search results and return a job DataFrame."""
         self.driver.get(url)
         self._scroll_page(min_jobs)
 
-        cards = self.driver.find_elements(By.CSS_SELECTOR, "article.jobTuple")
+        cards = self.driver.find_elements(By.CSS_SELECTOR, "article.jobTuple, div.jobTuple, li.jobTuple, div[class*='jobTuple']")
+        print(f"[DEBUG] Naukri card count: {len(cards)}")
         jobs: List[Dict[str, str]] = []
 
         for card in cards[:min_jobs]:
@@ -191,7 +224,18 @@ class JobScraper:
                 "posted_date": details.get("posted_date", ""),
             })
 
-        return pd.DataFrame(jobs)
+        return pd.DataFrame(jobs, columns=[
+            "platform",
+            "job_title",
+            "company",
+            "location",
+            "experience_required",
+            "skills",
+            "salary",
+            "job_description",
+            "apply_link",
+            "posted_date",
+        ])
 
     def _scroll_page(self, min_jobs: int) -> None:
         """Scroll until enough jobs are loaded or no more new cards appear."""
